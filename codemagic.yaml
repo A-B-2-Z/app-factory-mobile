@@ -1,0 +1,62 @@
+workflows:
+  ios-release:
+    name: iOS App Store Release
+    max_build_duration: 60
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.appfactory.contentrepurposerai
+      vars:
+        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_SCHEME: App
+      node: latest
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Add iOS platform
+        script: |
+          if [ ! -d "ios" ]; then npx cap add ios; fi
+      - name: Sync Capacitor
+        script: npx cap sync ios
+      - name: Install pods
+        script: cd ios/App && pod install
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+
+  android-release:
+    name: Android Play Store Release
+    max_build_duration: 60
+    environment:
+      android_signing:
+        - app-factory-keystore
+      vars:
+        PACKAGE_NAME: com.appfactory.contentrepurposerai
+      node: latest
+      java: 17
+    scripts:
+      - name: Install dependencies
+        script: npm install
+      - name: Add Android platform
+        script: |
+          if [ ! -d "android" ]; then npx cap add android; fi
+      - name: Sync Capacitor
+        script: npx cap sync android
+      - name: Build AAB
+        script: cd android && ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
