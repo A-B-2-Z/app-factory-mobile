@@ -1,7 +1,7 @@
 {
   "appId": "com.appfactory.contentrepurposerai",
   "appName": "Content Repurposer AI",
-  "webDir": "dist",
+  "webDir": ".",
   "server": {
     "androidScheme": "https"
   },
